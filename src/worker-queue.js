@@ -17,10 +17,6 @@ function processMessage(workerInstance) {
 }
 
 function loop(workerInstance) {
-  if (workerInstance.shouldStop) {
-    return
-  }
-
   const nextLoop = loop.bind(null, workerInstance)
 
   if (workerInstance.processingWorker instanceof Promise) {
@@ -40,7 +36,6 @@ function startWorkerQueue() {
   const workerInstance = {
     queue: [],
     processingWorker: null,
-    shouldStop: false,
   }
 
   const workerQueue = {
@@ -55,15 +50,20 @@ function startWorkerQueue() {
       if (typeof message.processor !== 'function') {
         throw TypeError('addMessage argument message.processor must be a function')
       }
-      return new Promise(resolve => workerInstance.queue.push({message, onMessageProcessed: resolve}))
+      return new Promise((resolve, reject) => workerInstance.queue.push({
+        message,
+        onMessageProcessed: resolve,
+        onMessageCanceled: reject,
+      }))
     },
 
     /**
-     * Stop the worker loop.
+     * Cancel all queued jobs.
      */
-    stop() {
-      workerInstance.shouldStop = true
-    }
+    cancelAllPending() {
+      workerInstance.queue.forEach(({onMessageCanceled}) => onMessageCanceled())
+      workerInstance.queue = []
+    },
   }
 
   loop(workerInstance)
