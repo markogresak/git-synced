@@ -4,6 +4,7 @@ const logger = require('./simple-logger')
 const getFetchOpts = require('./get-fetch-opts')
 const MergeError = require('./merge-error')
 const parseBranchName = require('./parse-branch-name')
+const getBranches = require('./get-branches')
 
 const log = logger.log('mergeBranchPair:log')
 const error = logger.error('mergeBranchPair:error')
@@ -11,11 +12,35 @@ const error = logger.error('mergeBranchPair:error')
 
 function fetch(githubToken, repoConfig, repo) {
   log(`fetch ${repoConfig.name} from remote ${repoConfig.remote_name}`)
+
+  function resolveBranchCommits(allBranches) {
+    return Promise.all(allBranches.map(branch => repo.getBranchCommit(branch)))
+      .then(commits => _.zip(allBranches, commits))
+  }
+
+  const isHeadErrorRe = /Cannot force update branch '.*' as it is the current HEAD of the repository\./i
+
+  function createLocalBranch([remoteBranchName, commit]) {
+    return repo.createBranch(parseBranchName(remoteBranchName, repoConfig.remote_name), commit, true)
+      .catch(err => {
+        // ignore error if trying to update current HEAD
+        if (!isHeadErrorRe.test(err.message)) {
+          throw err
+        }
+      })
+  }
+
   return repo.fetchAll(getFetchOpts(githubToken))
+    .then(() => getBranches(repoConfig))
+    .then(resolveBranchCommits)
+    .then(branchCommitsPairs => Promise.all(branchCommitsPairs.map(createLocalBranch)))
     .then(() => repo)
 }
 
 function pullBranch(repo, repoConfig, branchName) {
+  if (repo.isMerging()) {
+    throw new Error(`repository ${repoConfig.name} is already in mergeing state`)
+  }
   const localBranchName = parseBranchName(branchName, repoConfig.remote_name)
   return repo.mergeBranches(localBranchName, branchName)
     .then(() => localBranchName)
@@ -23,8 +48,10 @@ function pullBranch(repo, repoConfig, branchName) {
       if (_.isFunction(_.get(index, 'hasConflicts')) && index.hasConflicts()) {
         const conflictingEntries = index.entries().filter(entry => Git.Index.entryIsConflict(entry))
         throw new MergeError(`merge conflict occured when trying to pull ${branchName}`, conflictingEntries)
+      } else if (index instanceof Error) {
+        throw index
       } else {
-        throw new MergeError(`merge conflict occured when trying to pull ${branchName}`)
+        throw new Error(`an error occured when trying to pull ${branchName}`)
       }
     })
 }
@@ -32,13 +59,12 @@ function pullBranch(repo, repoConfig, branchName) {
 function push(githubToken, repoConfig, {repo, head}) {
   log(`push ${repoConfig.name} from remote ${repoConfig.remote_name}, branch ${head}`)
   return repo.getRemote(repoConfig.remote_name)
-    .then(remote => remote.push([`refs/heads/${head}:refs/heads/${head}`], getFetchOpts(githubToken)))
+    .then(remote => remote.push([`refs/heads/${head}:refs/heads/${head}`], getFetchOpts(githubToken, true)))
     .then(() => repo)
 }
 
 function resolveRef(repo, refName) {
   log(`resolve ${refName}`)
-  // return Promise.resolve(refName)
   return Git.Reference.lookup(repo, refName)
     .then(ref => ref.shorthand())
     .catch(() => refName)
@@ -59,8 +85,10 @@ function merge(repoPath, {repo, branchPair}) {
         const conflictingEntries = index.entries().filter(entry => Git.Index.entryIsConflict(entry))
         error(`merge conflict occured when trying to merge ${upstream}`)
         throw new MergeError(`merge conflict occured when trying to merge ${upstream}`, conflictingEntries)
-      } else {
+      } else if (index instanceof Error) {
         throw index
+      } else {
+        throw new Error(`an error occured when trying to merge ${upstream} into ${head}`)
       }
     })
 }
