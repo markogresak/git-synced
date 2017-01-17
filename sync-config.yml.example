@@ -1,5 +1,5 @@
 repositories:
-  - pamoja-platform:
+  - repo1:
     remote_url: https://github.com/[...].git
     local_path: /tmp/[...]
     branches:
@@ -11,7 +11,7 @@ repositories:
         sort: semver
       - develop
 
-  - pamoja-canvas:
+  - repo2:
     remote_url: https://github.com/[...].git
     remote_name: 'upstream'
     local_path: ../tmp/[...]

@@ -126,21 +126,21 @@ test('syncConfig.repositories[1] remote_name', t => {
 })
 
 test('syncConfig local_path should be resolved relative to project root', t => {
-  const expected = path.resolve(__dirname, '..', '../tmp/dlabs/pamoja-canvas')
+  const expected = path.resolve(__dirname, '..', '../tmp/dlabs/repo2')
   const actual = syncConfig.repositories[1].local_path
 
   t.is(actual, expected)
 })
 
 test('syncConfig local_path should remain the same if not relative', t => {
-  const expected = '/tmp/dlabs/pamoja-platform'
+  const expected = '/tmp/dlabs/repo1'
   const actual = syncConfig.repositories[0].local_path
 
   t.is(actual, expected)
 })
 
 test('syncConfig should define repository name', t => {
-  const expected = ['pamoja-platform', 'pamoja-canvas']
+  const expected = ['repo1', 'repo2']
   const actual = syncConfig.repositories.map(repo => repo.name)
 
   t.deepEqual(actual, expected)
