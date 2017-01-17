@@ -21,6 +21,7 @@
     "githubhook": "^1.7.1",
     "lodash": "^4.17.3",
     "nodegit": "^0.16.0",
+    "npid": "^0.4.0",
     "semver-sort": "0.0.4",
     "yamljs": "^0.2.8"
   },

@@ -1,5 +1,15 @@
 /* eslint-disable no-console */
 
+const npid = require('npid')
+
+try {
+  const pid = npid.create('/var/run/git-synced.pid')
+  pid.removeOnExit()
+} catch (err) {
+  console.error(err)
+  process.exit(1)
+}
+
 const githubhook = require('githubhook')
 require('dotenv').config()
 
