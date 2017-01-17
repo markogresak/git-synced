@@ -3,7 +3,7 @@
 const npid = require('npid')
 
 try {
-  const pid = npid.create('/var/run/git-synced.pid')
+  const pid = npid.create('./git-synced.pid', true)
   pid.removeOnExit()
 } catch (err) {
   console.error(err)
