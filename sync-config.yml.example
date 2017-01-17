@@ -1,0 +1,23 @@
+repositories:
+  - pamoja-platform:
+    remote_url: https://github.com/[...].git
+    local_path: /tmp/[...]
+    branches:
+      - master
+      - preview
+      - sandbox
+      - release:
+        regex: /release\/.+/
+        sort: semver
+      - develop
+
+  - pamoja-canvas:
+    remote_url: https://github.com/[...].git
+    remote_name: 'upstream'
+    local_path: ../tmp/[...]
+    branches:
+      - master
+      - release:
+        regex: /release\/.+/
+        sort: semver
+      - develop

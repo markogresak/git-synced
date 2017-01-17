@@ -1,0 +1,22 @@
+{
+  "extends": "airbnb",
+  "env": {
+    "commonjs": true,
+    "es6": true,
+    "jasmine": true,
+  },
+  "rules": {
+    "no-confusing-arrow": 0,
+    "func-names": 0,
+    "space-before-function-paren": [2, {"anonymous": "always", "named": "never"}],
+    "no-undef": 2,
+    "comma-dangle": 0,
+    "object-curly-spacing": [0, "always"],
+    "arrow-body-style": [1, "as-needed"],
+    "arrow-parens": [1, "as-needed"],
+    "consistent-return": 0,
+    "semi": [1, "never"],
+    "max-len": 0,
+    "import/no-extraneous-dependencies": 0,
+  }
+}

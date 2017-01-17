@@ -1,0 +1,23 @@
+repositories:
+  - pamoja-platform:
+    remote_url: https://github.com/dlabs/pamoja-platform.git
+    local_path: /tmp/dlabs/pamoja-platform
+    branches:
+      - master
+      - preview
+      - sandbox
+      - release:
+        regex: /release\/.+/
+        sort: semver
+      - develop
+
+  - pamoja-canvas:
+    remote_url: https://github.com/dlabs/pamoja-canvas.git
+    remote_name: 'upstream'
+    local_path: ../tmp/dlabs/pamoja-canvas
+    branches:
+      - master
+      - release:
+        regex: /release\/.+/
+        sort: semver
+      - develop
