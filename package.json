@@ -22,6 +22,8 @@
     "lodash": "^4.17.3",
     "nodegit": "^0.16.0",
     "npid": "^0.4.0",
+    "nodemailer": "^2.7.0",
+    "nodemailer-mailgun-transport": "^1.2.4",
     "semver-sort": "0.0.4",
     "yamljs": "^0.2.8"
   },

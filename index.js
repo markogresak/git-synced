@@ -20,6 +20,8 @@ const getBranches = require('./src/get-branches')
 const getBranchPairs = require('./src/get-branch-pairs')
 const mergeBranchPair = require('./src/merge-branch-pair')
 const startWorkerQueue = require('./src/worker-queue')
+const MergeError = require('./src/merge-error')
+const sendMail = require('./src/send-mail')
 
 const log = logger.log('index:log')
 const error = logger.error('index:error')
@@ -44,7 +46,7 @@ function setupGitHubWebhook() {
 }
 
 
-function pushEventProcessor(repoConfig, {payload: {ref}}) {
+function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
   log(`begin pushEventProcessor for repo ${repoConfig.name} on ref ${ref}`)
   return Promise.resolve(repoConfig)
     .then(getBranches)
@@ -56,11 +58,33 @@ function pushEventProcessor(repoConfig, {payload: {ref}}) {
       return mergeBranchPair(process.env.GITHUB_TOKEN, {repoConfig, refsBranchPair})
     })
     .then(() => log(`done with pushEventProcessor for repo ${repoConfig.name} on ref ${ref}`))
-    .catch(err => error(`processor error: ${err.toString()}\nerr.stack`))
+    .catch(err => {
+      workerQueue.cancelAllPending()
+      error(`processor error: ${err.toString()}\n${err.stack}`)
+      if (err instanceof MergeError) {
+        console.log('err.conflicts.length', err.conflicts.length)
+        const files = `<h4>Files:</h4><ul>${err.conflicts.map(entry => `<li>${entry.path}<li>`).join('')}</ul>`
+        const conflictDescription = err.head && err.upstream
+          ? `"${err.upstream}" into "${err.head}" in repository "${repoConfig.name}"`
+          : `"${ref}" in repository "${repoConfig.name}"`
+
+        sendMail({
+          subject: `Merge conflict in "${repoConfig.name}".`,
+          html: `
+            <p>A merge conflict occured while trying to merge ${conflictDescription}</p>
+
+            ${err.conflicts.length > 0 ? files : ''}
+          `
+        })
+      }
+    })
 }
 
 function queueMergeJob(repoConfig, workerQueue, payload) {
-  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, repoConfig), payload})
+  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, repoConfig, workerQueue), payload})
+    .catch(() => {
+      log(`job in ${repoConfig.name} regarding ref "${payload.ref}" was canceled`)
+    })
 }
 
 function queueSyncAtStart(syncConfig, workerQueue) {

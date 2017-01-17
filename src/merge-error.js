@@ -4,10 +4,12 @@
  * @param {Array<IndexEntry>} conflicts Array of conflicting IndexEntry (http://www.nodegit.org/api/index_entry/)
  *                                        (optional, default = [])
  */
-function MergeError(message = 'Merge Error occured', conflicts = []) {
+function MergeError(message = 'Merge Error occured', conflicts = [], {upstream, head}) {
   this.name = 'MergeError'
   this.message = message
   this.conflicts = conflicts
+  this.upstream = upstream
+  this.head = head
   this.stack = (new Error()).stack
 }
 MergeError.prototype = Object.create(Error.prototype)

@@ -19,6 +19,10 @@
  - `GITHUB_WEBHOOK_SECRET`: a secred shared with GitHub's webhook config
  - `GITHUB_TOKEN`: github token which authorizes at least repo permissions
  - `SYNC_AT_START`: set to `true` if script should add all branch pairs to sync job on start
+ - `MAILGUN_API_KEY`: Mailgun API key
+ - `MAILGUN_DOMAIN`: Mailgun domain name
+ - `MAIL_SEND_FROM`: e-mail address to use as mail "from" address
+ - `MAIL_SEND_TO`: e-mail address(es) to send mail to, for multiple addresses, separate each address with `,`
 
 #### sync-config.yml
 

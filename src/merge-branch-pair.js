@@ -47,7 +47,7 @@ function pullBranch(repo, repoConfig, branchName) {
     .catch(index => {
       if (_.isFunction(_.get(index, 'hasConflicts')) && index.hasConflicts()) {
         const conflictingEntries = index.entries().filter(entry => Git.Index.entryIsConflict(entry))
-        throw new MergeError(`merge conflict occured when trying to pull ${branchName}`, conflictingEntries)
+        throw new MergeError(`merge conflict occured when trying to pull ${branchName}`, conflictingEntries, {head: localBranchName, upstream: branchName})
       } else if (index instanceof Error) {
         throw index
       } else {
@@ -84,7 +84,7 @@ function merge(repoPath, {repo, branchPair}) {
       if (_.isFunction(_.get(index, 'hasConflicts')) && index.hasConflicts()) {
         const conflictingEntries = index.entries().filter(entry => Git.Index.entryIsConflict(entry))
         error(`merge conflict occured when trying to merge ${upstream}`)
-        throw new MergeError(`merge conflict occured when trying to merge ${upstream}`, conflictingEntries)
+        throw new MergeError(`merge conflict occured when trying to merge ${upstream}`, conflictingEntries, {head, upstream})
       } else if (index instanceof Error) {
         throw index
       } else {
