@@ -1,6 +1,6 @@
 # git-synced
 
-> Sync branches in sequence
+> Cascading branch sync
 
 ### Why?
 
