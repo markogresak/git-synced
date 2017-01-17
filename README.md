@@ -1,5 +1,12 @@
 # git-synced
 
+> Sync branches in sequence
+
+### Why?
+
+Our team often works on multiple releases at once and we often wasted time on keeping future releases in sync. For example, one team member pushed features planned for `release/1.1.0` and other team member added changes for future `release/1.2.0`, we would want to merge changes from `release/1.1.0` into `release/1.2.0`. This script will do this automatically.
+Branch sequence is fully customizable and supports regex expressions, which are alphabetically sorted by default, but this can be changed to semver sort (for example, `release/1.1.0` is before `release/1.2.0`).
+
 
 ## Setup
 
@@ -33,6 +40,7 @@
      - `regex`: regex used to match branches
      - `sort` (optional): if set to `semver`, [`semverSort.asc`](https://github.com/ragingwind/semver-sort) will be used, otherwise defaults to alphabetical sort
 
+The script will merge first matching branch into the next one, unless the matched branch is last on the list. To chain merges, it relies on script creating a push event for next branch in sequence.
 
 ## Testing (development)
 
