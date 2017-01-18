@@ -24,7 +24,7 @@ function loop(workerInstance) {
   }
 
   processMessage(workerInstance)
-  setImmediate(nextLoop)
+  setTimeout(nextLoop, 100)
 }
 
 /**
