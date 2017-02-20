@@ -4,6 +4,7 @@ import semverSort from 'semver-sort'
 import getSyncConfig from '../src/get-sync-config'
 
 const syncConfig = getSyncConfig(path.resolve(__dirname, './mocks/sync-config.mock.yml'))
+const syncConfigNoGitConfig = getSyncConfig(path.resolve(__dirname, './mocks/sync-config-no-git_config.mock.yml'))
 
 function testSyncConfigKey({branches, releaseIndex}, index) {
   test(`syncConfig.repositories[${index}] sortFn branch release [${releaseIndex}]`, t => {
@@ -144,4 +145,21 @@ test('syncConfig should define repository name', t => {
   const actual = syncConfig.repositories.map(repo => repo.name)
 
   t.deepEqual(actual, expected)
+})
+
+test('syncConfig should parse git_config', t => {
+  const expected = [
+    {name: 'user.name', value: 'username'},
+    {name: 'user.email', value: 'user@example.com'},
+  ]
+  const actual = syncConfig.gitConfig
+
+  t.deepEqual(expected, actual)
+})
+
+test('syncConfig without git_config field should have empty array as gitConfig', t => {
+  const expected = []
+  const actual = syncConfigNoGitConfig.gitConfig
+
+  t.deepEqual(expected, actual)
 })

@@ -65,7 +65,7 @@ function cloneGitRepository(githubToken, {local_path: repoPath, remote_url: repo
     if (exists) {
       log(`repository at ${repoPath} already exists, skip cloning`)
       // repository already exists, skip clone
-      return Promise.resolve()
+      return Git.Repository.open(repoPath)
     }
     return cloneRepository(repoUrl, repoPath, cloneOptions)
   })

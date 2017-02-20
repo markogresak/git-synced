@@ -1,3 +1,6 @@
+git_config:
+  - user.name: username
+  - user.email: user@example.com
 repositories:
   - repo1:
     remote_url: https://github.com/dlabs/repo1.git

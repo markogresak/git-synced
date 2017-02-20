@@ -40,6 +40,13 @@ function parseBranchConfig(branch) {
   return Object.assign({}, defaultBranchConfig, branchConfig)
 }
 
+function parseGitConfig(syncConfig) {
+  return _.map(syncConfig.git_config, configObj => {
+    const name = _.keys(configObj)[0]
+    return {name, value: configObj[name]}
+  })
+}
+
 /**
  * Load config from `configPath` and parse it for later branch filtering and sorting.
  *
@@ -56,6 +63,7 @@ function getSyncConfig(configPath = defaultConfigPath) {
 
   const syncConfig = yaml.load(configPath)
   return {
+    gitConfig: parseGitConfig(syncConfig),
     repositories: syncConfig.repositories.map(repo => {
       const {remote_url, remote_name: remoteName = 'origin', local_path: localPath, branches} = repo
       return {

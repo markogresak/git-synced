@@ -16,6 +16,7 @@ require('dotenv').config()
 const logger = require('./src/simple-logger')
 const getSyncConfig = require('./src/get-sync-config')
 const cloneGitRepository = require('./src/clone-git-repository')
+const setGitConfig = require('./src/set-git-config')
 const getBranches = require('./src/get-branches')
 const getBranchPairs = require('./src/get-branch-pairs')
 const mergeBranchPair = require('./src/merge-branch-pair')
@@ -102,11 +103,16 @@ function queueSyncAtStart(syncConfig, workerQueue) {
   return Promise.all(syncConfig.repositories.map(queueSyncForRepo))
 }
 
+function cloneAndSetup(gitConfig, repoConfig) {
+  return cloneGitRepository(process.env.GITHUB_TOKEN, repoConfig)
+    .then(setGitConfig.bind(null, gitConfig))
+}
+
 function run() {
   const syncConfig = getSyncConfig()
   const workerQueue = startWorkerQueue()
 
-  Promise.all(syncConfig.repositories.map(cloneGitRepository.bind(null, process.env.GITHUB_TOKEN)))
+  Promise.all(syncConfig.repositories.map(cloneAndSetup.bind(null, syncConfig.gitConfig)))
     .then(queueSyncAtStart.bind(null, syncConfig, workerQueue))
     .then(() => {
       const githubWebhook = setupGitHubWebhook()

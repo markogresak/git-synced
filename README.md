@@ -33,6 +33,7 @@ Branch sequence is fully customizable and supports regex expressions, which are 
 
 #### sync-config.yml
 
+ - `git_config`: `name: value` pairs of git config to set for all repositories (e.g. `user.name: username`)
  - `repositories`: list of repositories to handle, each should contain the following properties:
    - `remote_url`: URL where repository is hosted
    - `local_path`: path where the repository will be cloned to, either absolute or relative to project root
