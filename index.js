@@ -23,6 +23,7 @@ const mergeBranchPair = require('./src/merge-branch-pair')
 const startWorkerQueue = require('./src/worker-queue')
 const MergeError = require('./src/merge-error')
 const sendMail = require('./src/send-mail')
+const initPing = require('./src/init-ping')
 
 const log = logger.log('index:log')
 const error = logger.error('index:error')
@@ -112,6 +113,7 @@ function run() {
   const syncConfig = getSyncConfig()
   const workerQueue = startWorkerQueue()
 
+  initPing()
   Promise.all(syncConfig.repositories.map(cloneAndSetup.bind(null, syncConfig.gitConfig)))
     .then(queueSyncAtStart.bind(null, syncConfig, workerQueue))
     .then(() => {
