@@ -120,8 +120,11 @@ function run() {
       const githubWebhook = setupGitHubWebhook()
       syncConfig.repositories.forEach(repoConfig => {
         githubWebhook.on(`push:${repoConfig.name}`, (ref, data) => {
-          const remoteRef = ref.replace('/heads/', `/remotes/${repoConfig.remote_name}/`)
-          queueMergeJob(repoConfig, workerQueue, {ref: remoteRef, data})
+          const doesPushedBranchMatch = repoConfig.branches.some(branch => branch.nameFilterFn(ref))
+          if (doesPushedBranchMatch) {
+            const remoteRef = ref.replace('/heads/', `/remotes/${repoConfig.remote_name}/`)
+            queueMergeJob(repoConfig, workerQueue, {ref: remoteRef, data})
+          }
         })
       })
     })
