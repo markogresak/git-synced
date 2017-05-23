@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 
+const _ = require('lodash')
 const npid = require('npid')
 
 try {
@@ -64,8 +65,9 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
       workerQueue.cancelAllPending()
       error(`processor error: ${err.toString()}\n${err.stack}`)
       if (err instanceof MergeError) {
-        console.log('err.conflicts.length', err.conflicts.length)
-        const files = `<h4>Files:</h4><ul>${err.conflicts.map(entry => `<li>${entry.path}<li>`).join('')}</ul>`
+        const conflicts = _.uniqBy(err.conflicts, entry => entry.path)
+        console.log('conflicts.length', conflicts.length)
+        const files = `<h4>Files:</h4><ul>${conflicts.map(entry => `<li>${entry.path}<li>`).join('')}</ul>`
         const conflictDescription = err.head && err.upstream
           ? `"${err.upstream}" into "${err.head}" in repository "${repoConfig.name}"`
           : `"${ref}" in repository "${repoConfig.name}"`
@@ -75,7 +77,7 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
           html: `
             <p>A merge conflict occured while trying to merge ${conflictDescription}</p>
 
-            ${err.conflicts.length > 0 ? files : ''}
+            ${conflicts.length > 0 ? files : ''}
           `
         })
       }
