@@ -56,14 +56,6 @@ function startWorkerQueue() {
         onMessageCanceled: reject,
       }))
     },
-
-    /**
-     * Cancel all queued jobs.
-     */
-    cancelAllPending() {
-      workerInstance.queue.forEach(({onMessageCanceled}) => onMessageCanceled())
-      workerInstance.queue = []
-    },
   }
 
   loop(workerInstance)
