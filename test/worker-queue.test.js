@@ -71,3 +71,24 @@ test('workerQueue addMessage invalid processor value', t => {
   t.throws(callAddMessage({processor: undefined}), TypeError, 'should throw TypeError if message.processor is undefined')
   t.throws(callAddMessage({processor: true}), TypeError, 'should throw TypeError if message.processor is a boolean')
 })
+
+test('workerQueue cancelAllPending in setImmediate', t => {
+  const workerQueue = startWorkerQueue()
+  const messages = _.range(5).map(i => ({processor: sinon.spy(longProcessor), payload: {data: `msg ${i}`}}))
+  const addMessagePromises = Promise.all(messages.map((message, i) => {
+    const addMsgPromise = workerQueue.addMessage(message)
+    if (i === 0) {
+      addMsgPromise.then(() => workerQueue.cancelAllPending())
+    }
+    return addMsgPromise
+  // just pass caught (canceled) messages so .then will still work
+  })).catch(() => {})
+
+  return addMessagePromises.then(() => {
+    messages.forEach((message, i) => {
+      // only first should be called, other messages should not be processed
+      const expectedWasCalled = i === 0
+      t.is(message.processor.called, expectedWasCalled, 'only first message should have be called')
+    })
+  })
+})

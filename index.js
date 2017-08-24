@@ -62,6 +62,7 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
     })
     .then(() => log(`done with pushEventProcessor for repo ${repoConfig.name} on ref ${ref}`))
     .catch(err => {
+      workerQueue.cancelAllPending()
       error(`processor error: ${err.toString()}\n${err.stack}`)
       if (err instanceof MergeError) {
         const conflicts = _.uniqBy(err.conflicts, entry => entry.path)
