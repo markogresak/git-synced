@@ -88,7 +88,7 @@ test('workerQueue cancelAllPending in setImmediate', t => {
     messages.forEach((message, i) => {
       // only first should be called, other messages should not be processed
       const expectedWasCalled = i === 0
-      t.is(message.processor.called, expectedWasCalled, 'only first message should have be called')
+      t.is(message.processor.called, expectedWasCalled, 'only the first message should have been processed')
     })
   })
 })
