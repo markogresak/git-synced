@@ -62,7 +62,8 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
     })
     .then(() => log(`done with pushEventProcessor for repo ${repoConfig.name} on ref ${ref}`))
     .catch(err => {
-      workerQueue.cancelAllPending()
+      workerQueue.cancelAllPending(repoConfig.name)
+      log(`processing on repo ${repoConfig.name} failed, canceled all pending jobs for this repo`)
       error(`processor error: ${err.toString()}\n${err.stack}`)
       if (err instanceof MergeError) {
         const conflicts = _.uniqBy(err.conflicts, entry => entry.path)
@@ -85,7 +86,7 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
 }
 
 function queueMergeJob(repoConfig, workerQueue, payload) {
-  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, repoConfig, workerQueue), payload})
+  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, repoConfig, workerQueue), payload}, repoConfig.name)
     .catch(() => {
       log(`job in ${repoConfig.name} regarding ref "${payload.ref}" was canceled`)
     })
