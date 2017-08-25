@@ -46,11 +46,12 @@ function startWorkerQueue() {
      *
      * @return {Promise}       Promise which is resolved when the message is processed.
      */
-    addMessage(message) {
+    addMessage(message, label = '') {
       if (typeof message.processor !== 'function') {
         throw TypeError('addMessage argument message.processor must be a function')
       }
       return new Promise((resolve, reject) => workerInstance.queue.push({
+        label,
         message,
         onMessageProcessed: resolve,
         onMessageCanceled: reject,
@@ -60,9 +61,15 @@ function startWorkerQueue() {
     /**
      * Cancel all queued jobs.
      */
-    cancelAllPending() {
-      workerInstance.queue.forEach(({onMessageCanceled}) => onMessageCanceled())
-      workerInstance.queue = []
+    cancelAllPending(cancelLabel = '') {
+      // Find messages where the label is matching the `cancelLabel` and call its `onMessageCanceled` callback.
+      workerInstance.queue.forEach(({label, onMessageCanceled}) => {
+        if (label === cancelLabel) {
+          onMessageCanceled()
+        }
+      })
+      // Remove all queue items where the label is matching `cancelLabel`.
+      workerInstance.queue = workerInstance.queue.filter(({label}) => label !== cancelLabel)
     },
   }
 

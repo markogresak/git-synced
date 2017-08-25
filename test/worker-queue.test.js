@@ -92,3 +92,27 @@ test('workerQueue cancelAllPending in setImmediate', t => {
     })
   })
 })
+
+test('workerQueue cancelAllPending with a label', t => {
+  const evenLabel = 'even'
+  const oddLabel = 'odd'
+
+  const workerQueue = startWorkerQueue()
+  const messages = _.range(5).map(i => ({processor: sinon.spy(longProcessor), payload: {data: `msg ${i}`}}))
+  const addMessagePromises = Promise.all(messages.map((message, i) => {
+    const addMsgPromise = workerQueue.addMessage(message, i % 2 === 0 ? evenLabel : oddLabel)
+    if (i === 0) {
+      addMsgPromise.then(() => workerQueue.cancelAllPending(oddLabel))
+    }
+    // just pass caught (canceled) messages so .then will still work
+    return addMsgPromise.catch(() => {})
+  }))
+
+  return addMessagePromises.then(() => {
+    messages.forEach((message, i) => {
+      // only even message's processor function should have been called, other messages should not be processed
+      const expectedWasCalled = i % 2 === 0
+      t.is(message.processor.called, expectedWasCalled, `only the even messages (${i}) should have been processed`)
+    })
+  })
+})
