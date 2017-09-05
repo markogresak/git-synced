@@ -43,6 +43,15 @@ Branch sequence is fully customizable and supports regex expressions, which are 
 
 The script will merge first matching branch into the next one, unless the matched branch is last on the list. To chain merges, it relies on script creating a push event for next branch in sequence.
 
+#### Webhook config on github repository
+
+ - Go to repository -> Settings -> Webhooks
+ - Click Add webhook and set:
+   - Payload url: `[url to this webook server]/github/callback` (don't forget about using the correct port in the url)
+   - Content type: application/json
+   - Secret: the same secret as `GITHUB_WEBHOOK_SECRET` value in `.env`
+   - Events: can be anything, but currently just the `push` events are processed, so it's suggested to use "Just the `push` event" for best performance
+
 ## Testing (development)
 
 Use `npm test` to run linter and tests or `npm run test:coverage` to see coverage.
