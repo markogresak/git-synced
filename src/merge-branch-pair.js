@@ -63,8 +63,8 @@ function push(githubToken, repoConfig, {repo, head}) {
     .then(() => repo)
 }
 
-function resolveRef(repo, refName) {
-  log(`resolve ${refName}`)
+function resolveRef(repo, repoConfig, refName) {
+  log(`resolve ${refName} for repo ${repoConfig.name}`)
   return Git.Reference.lookup(repo, refName)
     .then(ref => ref.shorthand())
     .catch(() => refName)
@@ -72,11 +72,11 @@ function resolveRef(repo, refName) {
 
 function merge(repoConfig, {repo, branchPair}) {
   const [upstream, head] = branchPair
-  log(`attempt to merge ${upstream} to ${head}`)
+  log(`attempt to merge ${upstream} to ${head} in repo ${repoConfig.name}`)
   return repo.mergeBranches(head, upstream)
     .then(oid => {
       const oidStr = _.isFunction(_.get(oid, 'tostrS')) ? oid.tostrS() : oid
-      log(`branch ${upstream} was successfully merged (oid: ${oidStr})`)
+      log(`branch ${upstream} of repo ${repoConfig.name} was successfully merged (oid: ${oidStr})`)
       return {repo, head}
     })
     .catch(index => {
@@ -122,7 +122,7 @@ function mergeBranchPair(githubToken, {repoConfig, refsBranchPair}) {
   return Git.Repository.open(repoConfig.local_path)
     .then(fetch.bind(null, githubToken, repoConfig))
     .then(repo => (
-      Promise.all([upstreamRef, headRef].map(resolveRef.bind(null, repo)))
+      Promise.all([upstreamRef, headRef].map(resolveRef.bind(null, repo, repoConfig)))
         .then(branchPair => ({repo, branchPair}))
     ))
     .then(({repo, branchPair}) => (

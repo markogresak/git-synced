@@ -56,7 +56,7 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
     .then(allBranches => getBranchPairs(allBranches, ref, 1))
     .then(([refsBranchPair]) => {
       if (!refsBranchPair) {
-        return log('No next branch to merge into')
+        return log(`No next branch to merge into for repo ${repoConfig.name}`)
       }
       return mergeBranchPair(process.env.GITHUB_TOKEN, {repoConfig, refsBranchPair})
     })
