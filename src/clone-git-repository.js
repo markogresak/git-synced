@@ -50,15 +50,17 @@ function cloneRepository(repoUrl, repoPath, cloneOptions) {
  * Try to clone a repo to path if it doesn't exist yet.
  *
  * @param  {string} githubToken GitHub access token, will be ignored if falsey value.
- * @param  {string} local_path  Local path to repository.
- * @param  {string} remote_url  Url to be used with `git clone`.
+ * @param  {object} repoConfig  Configuration for repository to clone, expecting
+ *                                `local_path` (Local path to repository) and
+ *                                `remote_url` (Url to be used with `git clone`) keys.
  *
  * @return {Promise}            Promise resolved after repo is cloned or rejected if there was an error
  *                              with `repoPath` access permissions or with `git clone` command.
  */
-function cloneGitRepository(githubToken, {local_path: repoPath, remote_url: repoUrl}) {
+function cloneGitRepository(githubToken, repoConfig) {
+  const {local_path: repoPath, remote_url: repoUrl} = repoConfig
   const cloneOptions = {
-    fetchOpts: getFetchOpts(githubToken)
+    fetchOpts: getFetchOpts(githubToken, repoConfig),
   }
 
   return checkIfRepositoryExists(repoPath).then(exists => {

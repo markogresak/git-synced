@@ -30,7 +30,7 @@ function fetch(githubToken, repoConfig, repo) {
       })
   }
 
-  return repo.fetchAll(getFetchOpts(githubToken))
+  return repo.fetchAll(getFetchOpts(githubToken, repoConfig))
     .then(() => getBranches(repoConfig))
     .then(resolveBranchCommits)
     .then(branchCommitsPairs => Promise.all(branchCommitsPairs.map(createLocalBranch)))
@@ -59,7 +59,7 @@ function pullBranch(repo, repoConfig, branchName) {
 function push(githubToken, repoConfig, {repo, head}) {
   log(`push ${repoConfig.name} from remote ${repoConfig.remote_name}, branch ${head}`)
   return repo.getRemote(repoConfig.remote_name)
-    .then(remote => remote.push([`refs/heads/${head}:refs/heads/${head}`], getFetchOpts(githubToken, true)))
+    .then(remote => remote.push([`refs/heads/${head}:refs/heads/${head}`], getFetchOpts(githubToken, repoConfig, true)))
     .then(() => repo)
 }
 
