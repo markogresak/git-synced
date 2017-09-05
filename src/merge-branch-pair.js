@@ -70,7 +70,7 @@ function resolveRef(repo, refName) {
     .catch(() => refName)
 }
 
-function merge(repoPath, {repo, branchPair}) {
+function merge(repoConfig, {repo, branchPair}) {
   const [upstream, head] = branchPair
   log(`attempt to merge ${upstream} to ${head}`)
   return repo.mergeBranches(head, upstream)
@@ -80,10 +80,10 @@ function merge(repoPath, {repo, branchPair}) {
       return {repo, head}
     })
     .catch(index => {
-      error(`merge ${upstream} to ${head} failed`)
+      error(`merge ${upstream} to ${head} failed in repo ${repoConfig.name}`)
       if (_.isFunction(_.get(index, 'hasConflicts')) && index.hasConflicts()) {
         const conflictingEntries = index.entries().filter(entry => Git.Index.entryIsConflict(entry))
-        error(`merge conflict occured when trying to merge ${upstream}`)
+        error(`merge conflict in repo ${repoConfig.name} occured when trying to merge ${upstream}`)
         throw new MergeError(`merge conflict occured when trying to merge ${upstream}`, conflictingEntries, {head, upstream})
       } else if (index instanceof Error) {
         throw index
@@ -114,7 +114,7 @@ function mergeBranchPair(githubToken, {repoConfig, refsBranchPair}) {
   }
 
   if (!_.isArrayLike(refsBranchPair) || refsBranchPair.length !== 2) {
-    throw Error(`mergeBranchPair: invalid branchPairs value (got ${refsBranchPair})`)
+    throw Error(`mergeBranchPair: invalid branchPairs value for repo ${repoConfig.name} (got ${refsBranchPair})`)
   }
 
   const [upstreamRef, headRef] = refsBranchPair
@@ -129,7 +129,7 @@ function mergeBranchPair(githubToken, {repoConfig, refsBranchPair}) {
       Promise.all(branchPair.map(pullBranch.bind(null, repo, repoConfig)))
         .then(localBranchPair => ({repo, branchPair: localBranchPair}))
     ))
-    .then(merge.bind(null, repoConfig.local_path))
+    .then(merge.bind(null, repoConfig))
     .then(push.bind(null, githubToken, repoConfig))
 }
 

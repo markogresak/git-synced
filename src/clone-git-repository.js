@@ -13,14 +13,14 @@ function checkIfRepositoryExists(repoPath) {
     fs.access(repoPath, fs.constants.F_OK, noPathErr => {
       // when the error is set, path does not exist
       if (noPathErr) {
-        error(`fs.access(F_OK) error: ${noPathErr}`)
+        error(`fs.access(F_OK) error for path '${repoPath}': ${noPathErr}`)
         return resolve(false)
       }
 
       log(`check for write permissions at path ${repoPath}`)
       fs.access(repoPath, fs.constants.W_OK, noPermissionErr => {
         if (noPermissionErr) {
-          error(`fs.access(W_OK) error: ${noPermissionErr}`)
+          error(`fs.access(W_OK) error for path '${repoPath}': ${noPermissionErr}`)
           return reject(noPermissionErr)
         }
         log(`user has write permissions for directory ${repoPath}`)
@@ -40,7 +40,7 @@ function cloneRepository(repoUrl, repoPath, cloneOptions) {
       return repo
     })
     .catch(err => {
-      error(`git clone exited with error: ${err}`)
+      error(`git clone for repo '${repoUrl}' exited with error: ${err}`)
       // throw error to propagate it to next .catch
       throw err
     })
