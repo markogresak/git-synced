@@ -1,4 +1,5 @@
 const fs = require('fs')
+const rimraf = require('rimraf')
 const Git = require('nodegit')
 const logger = require('./simple-logger')
 const getFetchOpts = require('./get-fetch-opts')
@@ -70,30 +71,47 @@ function cloneRepository(repoUrl, repoPath, cloneOptions, repoConfig) {
     })
 }
 
+function removeRepo(repoPath, repoConfig, force) {
+  if (!force) {
+    return Promise.resolve()
+  }
+
+  log(`Got force = true for ${repoConfig.name}, removing the repo before cloning...`)
+  return new Promise(resolve => rimraf(repoPath, resolve))
+}
+
 /**
  * Try to clone a repo to path if it doesn't exist yet.
  *
- * @param  {string} githubToken GitHub access token, will be ignored if falsey value.
- * @param  {object} repoConfig  Configuration for repository to clone, expecting
- *                                `local_path` (Local path to repository) and
- *                                `remote_url` (Url to be used with `git clone`) keys.
+ * @param  {string} githubToken     GitHub access token, will be ignored if falsey value.
+ * @param  {object} repoConfig      Configuration for repository to clone, expecting
+ *                                    `local_path` (Local path to repository) and
+ *                                    `remote_url` (Url to be used with `git clone`) keys.
+ * @param  {boolean} [force=false]  (optional) If true, the repo will first be removed and then cloned again.
  *
  * @return {Promise}            Promise resolved after repo is cloned or rejected if there was an error
  *                              with `repoPath` access permissions or with `git clone` command.
  */
-function cloneGitRepository(githubToken, repoConfig) {
+function cloneGitRepository(githubToken, repoConfig, force = false) {
   const {local_path: repoPath, remote_url: repoUrl} = repoConfig
   const cloneOptions = {
     fetchOpts: getFetchOpts(githubToken, repoConfig),
   }
 
+  // Explicit check if force is boolean value of true to prevent any other truthy values.
+  const isForce = force === true
+
   return checkIfRepositoryExists(repoPath).then(exists => {
-    if (exists) {
+    if (exists && !isForce) {
       log(`repository at ${repoPath} already exists, skip cloning`)
       // repository already exists, skip clone
       return Git.Repository.open(repoPath)
     }
-    return cloneRepository(repoUrl, repoPath, cloneOptions, repoConfig)
+
+    // If it's true, first remove the repo, then proceed with cloning
+    return removeRepo(repoPath, repoConfig, isForce === true)
+      .then(() => log(`Repo ${repoConfig.name} was removed, proceeding with cloning...`))
+      .then(() => cloneRepository(repoUrl, repoPath, cloneOptions, repoConfig))
   })
 }
 

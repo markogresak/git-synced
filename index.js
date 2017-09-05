@@ -49,7 +49,7 @@ function setupGitHubWebhook() {
 }
 
 
-function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
+function pushEventProcessor(syncConfig, repoConfig, workerQueue, {payload: {ref}}) {
   log(`begin pushEventProcessor for repo ${repoConfig.name} on ref ${ref}`)
   return Promise.resolve(repoConfig)
     .then(getBranches)
@@ -81,12 +81,18 @@ function pushEventProcessor(repoConfig, workerQueue, {payload: {ref}}) {
             ${conflicts.length > 0 ? files : ''}
           `
         })
+      } else {
+        error(`unknown processor error for repo ${repoConfig.name}: ${err.toString()}\n${err.stack}`)
+        log(`removing repo ${repoConfig.name} and cloning it again`)
+        return cloneAndSetup(syncConfig.gitConfig, repoConfig, true)  // eslint-disable-line no-use-before-define
+          .then(queueSyncAtStart.bind(null, syncConfig, workerQueue)) // eslint-disable-line no-use-before-define
+          .then(() => log(`repo ${repoConfig.name} was successfully re-cloned`))
       }
     })
 }
 
-function queueMergeJob(repoConfig, workerQueue, payload) {
-  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, repoConfig, workerQueue), payload}, repoConfig.name)
+function queueMergeJob(syncConfig, repoConfig, workerQueue, payload) {
+  return workerQueue.addMessage({processor: pushEventProcessor.bind(null, syncConfig, repoConfig, workerQueue), payload}, repoConfig.name)
     .catch(() => {
       log(`job in ${repoConfig.name} regarding ref "${payload.ref}" was canceled`)
     })
@@ -101,14 +107,14 @@ function queueSyncAtStart(syncConfig, workerQueue) {
     return Promise.resolve(repoConfig)
       .then(getBranches)
       .then(getBranchPairs)
-      .then(allBranchPairs => allBranchPairs.forEach(([head]) => queueMergeJob(repoConfig, workerQueue, {ref: head})))
+      .then(allBranchPairs => allBranchPairs.forEach(([head]) => queueMergeJob(syncConfig, repoConfig, workerQueue, {ref: head})))
   }
 
   return Promise.all(syncConfig.repositories.map(queueSyncForRepo))
 }
 
-function cloneAndSetup(gitConfig, repoConfig) {
-  return cloneGitRepository(process.env.GITHUB_TOKEN, repoConfig)
+function cloneAndSetup(gitConfig, repoConfig, force) {
+  return cloneGitRepository(process.env.GITHUB_TOKEN, repoConfig, force)
     .then(setGitConfig.bind(null, gitConfig))
 }
 
@@ -126,7 +132,7 @@ function run() {
           const doesPushedBranchMatch = repoConfig.branches.some(branch => branch.nameFilterFn(ref))
           if (doesPushedBranchMatch) {
             const remoteRef = ref.replace('/heads/', `/remotes/${repoConfig.remote_name}/`)
-            queueMergeJob(repoConfig, workerQueue, {ref: remoteRef, data})
+            queueMergeJob(syncConfig, repoConfig, workerQueue, {ref: remoteRef, data})
           }
         })
       })
