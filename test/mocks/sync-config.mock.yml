@@ -3,6 +3,7 @@ git_config:
   - user.email: user@example.com
 repositories:
   - repo1:
+    submodule: true
     remote_url: https://github.com/dlabs/repo1.git
     local_path: /tmp/dlabs/repo1
     branches:
@@ -15,9 +16,21 @@ repositories:
       - develop
 
   - repo2:
+    submodule: false
     remote_url: https://github.com/dlabs/repo2.git
     remote_name: 'upstream'
     local_path: ../tmp/dlabs/repo2
+    branches:
+      - master
+      - release:
+        regex: /release\/.+/
+        sort: semver
+      - develop
+
+  - repo3:
+    remote_url: https://github.com/dlabs/repo3.git
+    remote_name: 'upstream'
+    local_path: ../tmp/dlabs/repo3
     branches:
       - master
       - release:

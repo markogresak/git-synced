@@ -141,7 +141,7 @@ test('syncConfig local_path should remain the same if not relative', t => {
 })
 
 test('syncConfig should define repository name', t => {
-  const expected = ['repo1', 'repo2']
+  const expected = ['repo1', 'repo2', 'repo3']
   const actual = syncConfig.repositories.map(repo => repo.name)
 
   t.deepEqual(actual, expected)
@@ -162,4 +162,25 @@ test('syncConfig without git_config field should have empty array as gitConfig',
   const actual = syncConfigNoGitConfig.gitConfig
 
   t.deepEqual(expected, actual)
+})
+
+test('syncConfig submodule should be true when set to true in the config', t => {
+  const expected = true
+  const actual = syncConfig.repositories[0].submodule
+
+  t.is(actual, expected)
+})
+
+test('syncConfig submodule should be false when set to false in the config', t => {
+  const expected = false
+  const actual = syncConfig.repositories[1].submodule
+
+  t.is(actual, expected)
+})
+
+test('syncConfig submodule should be false when not set in the config', t => {
+  const expected = false
+  const actual = syncConfig.repositories[2].submodule
+
+  t.is(actual, expected)
 })

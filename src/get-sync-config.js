@@ -65,13 +65,14 @@ function getSyncConfig(configPath = defaultConfigPath) {
   return {
     gitConfig: parseGitConfig(syncConfig),
     repositories: syncConfig.repositories.map(repo => {
-      const {remote_url, remote_name: remoteName = 'origin', local_path: localPath, branches} = repo
+      const {remote_url, remote_name: remoteName = 'origin', local_path: localPath, branches, submodule} = repo
       return {
         name: findConfigObjectKey(repo),
         remote_url,
         remote_name: remoteName,
         local_path: path.resolve(projectRoot, localPath),
         branches: branches.map(parseBranchConfig),
+        submodule: submodule === true,
       }
     })
   }
