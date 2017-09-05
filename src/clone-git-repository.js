@@ -40,7 +40,6 @@ function processSubmodule(repoConfig, cloneOptions, repo, submoduleName) {
     return submodule.init(1)
       .then(() => log(`Submodule init for repo ${repoConfig.name} was successful`))
       .then(() => submodule.update(0, new Git.SubmoduleUpdateOptions()))
-      .catch(() => process.exit(1))
       .then(() => log(`Submodule update for repo ${repoConfig.name} was successful`))
       .catch(err => error(`Submodule setup for repo ${repoConfig.name} failed: ${err.toString()}\n${err.stack}`))
   })
