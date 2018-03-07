@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 
-const _ = require('lodash')
 const npid = require('npid')
 
 try {
@@ -23,13 +22,13 @@ const getBranchPairs = require('./src/get-branch-pairs')
 const mergeBranchPair = require('./src/merge-branch-pair')
 const startWorkerQueue = require('./src/worker-queue')
 const MergeError = require('./src/merge-error')
-const sendMail = require('./src/send-mail')
+const sendConflictMail = require('./src/send-conflict-mail')
 const initPing = require('./src/init-ping')
 
 const log = logger.log('index:log')
 const error = logger.error('index:error')
 
-const expectedEnvVars = ['GITHUB_WEBHOOK_SECRET']
+const expectedEnvVars = ['GITHUB_WEBHOOK_SECRET', 'GITHUB_TOKEN']
 
 expectedEnvVars.forEach(envVar => {
   if (typeof process.env[envVar] !== 'string') {
@@ -66,21 +65,8 @@ function pushEventProcessor(syncConfig, repoConfig, workerQueue, {payload: {ref}
       log(`processing on repo ${repoConfig.name} failed, canceled all pending jobs for this repo`)
       error(`processor error for repo ${repoConfig.name}: ${err.toString()}\n${err.stack}`)
       if (err instanceof MergeError) {
-        const conflicts = _.uniqBy(err.conflicts, entry => entry.path)
-        console.log('conflicts.length', conflicts.length)
-        const files = `<h4>Files:</h4><ul>${conflicts.map(entry => `<li>${entry.path}<li>`).join('')}</ul>`
-        const conflictDescription = err.head && err.upstream
-          ? `"${err.upstream}" into "${err.head}" in repository "${repoConfig.name}"`
-          : `"${ref}" in repository "${repoConfig.name}"`
-
-        sendMail({
-          subject: `Merge conflict in "${repoConfig.name}".`,
-          html: `
-            <p>A merge conflict occured while trying to merge ${conflictDescription}</p>
-
-            ${conflicts.length > 0 ? files : ''}
-          `
-        })
+        sendConflictMail(process.env.GITHUB_TOKEN, {repoConfig, ref, err})
+          .then(() => log(`mail sent for confict "${err.upstream}" -> "${err.head}" in repo "${repoConfig.name}"`))
       } else {
         error(`unknown processor error for repo ${repoConfig.name}: ${err.toString()}\n${err.stack}`)
         log(`removing repo ${repoConfig.name} and cloning it again`)
