@@ -25,7 +25,10 @@ function createNewPr(token, {repoConfig, err}) {
     token,
   })
   return octokit.pullRequests.create(prOpts)
-    .then(result => result.html_url)
+    .then(response => {
+      console.log('create PR response:', response)
+      return response.data.html_url
+    })
     .catch(requestErr => {
       error(`An error occured while trying to create PR on repo ${repoConfig.name} for merge "${err.upstream}" into "${err.head}": ${requestErr}`)
     })
